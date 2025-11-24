@@ -1,0 +1,400 @@
+{
+  "name": "Student Intervention and Mentor Approval System",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/student-failure",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "d6855c5e-6845-4bab-8184-4018e74d56c8",
+      "name": "Student Failure Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -672,
+        96
+      ],
+      "webhookId": "effb5b08-9ed6-4066-8b72-6d51124cdbbe",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"received\": true,\n  \"message\": \"Intervention workflow started\"\n}",
+        "options": {}
+      },
+      "id": "5101a12c-c3e8-4ef3-9501-20eec610b92e",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "student_id",
+              "value": "={{ $json.body.student_id }}",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "student_name",
+              "value": "={{ $json.body.student_name }}",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "quiz_score",
+              "value": "={{ $json.body.quiz_score }}",
+              "type": "number"
+            },
+            {
+              "id": "id-4",
+              "name": "focus_minutes",
+              "value": "={{ $json.body.focus_minutes }}",
+              "type": "number"
+            },
+            {
+              "id": "id-5",
+              "name": "status",
+              "value": "Needs Intervention",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "6bd01308-1ca0-4845-bac1-7883b7931c68",
+      "name": "Normalize Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -320,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "nehil.contact@gmail.com",
+        "toEmail": "=nehil.1si22ci034@gmail.com",
+        "subject": "=Student Needs Intervention: {{ $json.student_name }}",
+        "html": "=<h2>Student Intervention Required</h2>\n\n<p><strong>Student Name:</strong> {{ $json.student_name }}</p>\n<p><strong>Student ID:</strong> {{ $json.student_id }}</p>\n<p><strong>Quiz Score:</strong> {{ $json.quiz_score }}</p>\n<p><strong>Focus Minutes:</strong> {{ $json.focus_minutes }}</p>\n\n<p>Please click the button below to approve and assign the remedial task:</p>\n\n<p>\n  <a href=\"{{ $execution.resumeUrl }}?student_id={{ $json.student_id }}&action=approve\"\n     style=\"padding: 10px 16px; background:#4CAF50; color:white; text-decoration:none; border-radius:6px;\">\n    Approve & Assign: Read Chapter 4\n  </a>\n</p>\n\n",
+        "options": {}
+      },
+      "id": "30984db1-122f-40d4-ae0e-a2a29162929d",
+      "name": "Email Mentor Notification",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        192
+      ],
+      "webhookId": "f3de8471-64f3-4636-97bb-b6a13754623c",
+      "credentials": {
+        "smtp": {
+          "id": "p3RiFRbI0LGa0hlK",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "responseMode": "lastNode",
+        "limitWaitTime": true,
+        "resumeAmount": 12,
+        "options": {}
+      },
+      "id": "8b6a4cf2-e641-477b-8082-14429fe1a163",
+      "name": "Wait For Mentor",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        192
+      ],
+      "webhookId": "14c82d22-bf6a-4c2f-9c7e-3408f5225978"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json._timeout == true }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "be5220df-0dea-46f1-8183-b9b43078d443",
+      "name": "Is Timed Out?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://intervention-engine.onrender.com/assign-intervention",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"student_id\": \"{{ $json.query.student_id || $json.student_id }}\",\n  \"task\": \"Read Chapter 4\"\n}\n",
+        "options": {}
+      },
+      "id": "78b6d1f2-1f0d-4e70-bdf1-93d5b169bda9",
+      "name": "Backend Assign Intervention",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        672,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "status",
+              "value": "Intervention Assigned",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "source",
+              "value": "mentor_approved",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "student_id",
+              "value": "={{ $json.query.student_id || $json.student_id }}\n",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "687e7278-c6e6-4a39-a719-22d56a607001",
+      "name": "Log Success",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        896,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://intervention-engine.onrender.com/assign-intervention",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"student_id\": {{ $json.student_id }},\n  \"task\": \"Auto-unlock\"\n}\n",
+        "options": {}
+      },
+      "id": "833ba9c5-82d2-46fd-980e-f2e6132ff737",
+      "name": "Backend Auto Unlock",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        672,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "nehil.contact@gmail.com",
+        "toEmail": "=nehil.1si22ci034@gmail.com",
+        "subject": "Mentor did not respond – Student auto-unlocked",
+        "html": "=<h2>⚠️ Escalation: Mentor Unresponsive</h2>\n\n<p>The mentor did not respond within the required 12-hour window.</p>\n\n<p><strong>Student Name:</strong> {{ $json.student_name }}</p>\n<p><strong>Student ID:</strong> {{ $json.student_id }}</p>\n<p><strong>Quiz Score:</strong> {{ $json.quiz_score }}</p>\n<p><strong>Focus Minutes:</strong> {{ $json.focus_minutes }}</p>\n\n<p>The student has now been automatically unlocked, and the system has assigned the fallback task:</p>\n\n<p><strong>Auto-unlock</strong></p>\n\n<p>— Intervention Engine System</p>\n",
+        "options": {}
+      },
+      "id": "19444516-43f8-43eb-885a-629159228b2c",
+      "name": "Escalation Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        896,
+        288
+      ],
+      "webhookId": "b60d93bc-cdda-4e67-b0fc-ea8bcdcd334d",
+      "credentials": {
+        "smtp": {
+          "id": "p3RiFRbI0LGa0hlK",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Student Failure Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "mahadev01.app.n8n.cloud",
+            "user-agent": "python-httpx/0.28.1",
+            "content-length": "117",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "2409:40f2:2092:40fa:945f:f86:3053:52cc",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "IN",
+            "cf-ray": "9a3815a7d2f53bb0-BOM",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "x-forwarded-for": "2409:40f2:2092:40fa:945f:f86:3053:52cc, 172.69.178.151",
+            "x-forwarded-host": "mahadev01.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-18-7959cfc789-zp8xj",
+            "x-is-trusted": "yes",
+            "x-real-ip": "2409:40f2:2092:40fa:945f:f86:3053:52cc"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "student_id": "11111111-1111-1111-1111-111111111111",
+            "student_name": "Test Student",
+            "quiz_score": 3,
+            "focus_minutes": 15
+          },
+          "webhookUrl": "https://mahadev01.app.n8n.cloud/webhook/student-failure",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Student Failure Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Payload": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Email Mentor Notification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Mentor Notification": {
+      "main": [
+        [
+          {
+            "node": "Wait For Mentor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait For Mentor": {
+      "main": [
+        [
+          {
+            "node": "Is Timed Out?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Timed Out?": {
+      "main": [
+        [
+          {
+            "node": "Backend Auto Unlock",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Backend Assign Intervention",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Backend Assign Intervention": {
+      "main": [
+        [
+          {
+            "node": "Log Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Backend Auto Unlock": {
+      "main": [
+        [
+          {
+            "node": "Escalation Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "6f670c53-0cc9-4e48-88f0-8625d0e6d42b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "569c4c0a5c16806ee42b54267eb76345cf049305634fc201864015dfc9d00367"
+  },
+  "id": "HT9Hni9UWeODiGVx",
+  "tags": []
+}

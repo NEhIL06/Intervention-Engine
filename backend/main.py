@@ -35,7 +35,12 @@ app = FastAPI(title="Alcovia Intervention Backend",lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # tighten in prod
+    allow_origins=[
+        "*",  # Allow all origins for development
+        "http://localhost:8081",
+        "http://localhost:19006",
+        "http://localhost:19000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
