@@ -16,21 +16,18 @@ ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False
 ssl_context.verify_mode = ssl.CERT_NONE
 
+from sqlalchemy.pool import NullPool
+
 engine = create_async_engine(
     settings.database_url.replace("?sslmode=require&connect_timeout=10", "").replace("&sslmode=require", ""),
     echo=False,
     future=True,
-    pool_pre_ping=True,      # Verify connections before using them
-    pool_size=5,             # Number of connections to maintain
-    max_overflow=10,         # Max connections beyond pool_size
-    # Disable prepared statements at SQLAlchemy level for pgbouncer
-    execution_options={
-        "prepared_statement_cache_size": 0,
-    },
+    poolclass=NullPool,  # Use NullPool to avoid connection pooling issues with pgbouncer
     connect_args={
         "ssl": ssl_context,  # SSL without certificate verification
         "timeout": 10,  # Connection timeout
-        "statement_cache_size": 0,  # Disable prepared statements at asyncpg level
+        "statement_cache_size": 0,  # CRITICAL: Disable prepared statements for pgbouncer
+        "prepared_statement_cache_size": 0,  # Also disable at this level
         "server_settings": {
             "jit": "off"  # Disable JIT for compatibility
         },
