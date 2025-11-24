@@ -1,36 +1,31 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from config import settings
-
-# settings.database_url must be formatted like:
-# postgresql+asyncpg://USER:PASSWORD@HOST:5432/postgres?sslmode=require&connect_timeout=10
-
 import ssl
-import socket
 
-# For asyncpg, we need to configure SSL differently than psycopg
-# Remove sslmode from URL and configure via connect_args
-# Force IPv4 to avoid "Network is unreachable" error on Render
-# Disable SSL verification for Supabase pooler compatibility
+# For asyncpg + pgbouncer, we need to disable prepared statements COMPLETELY
+# This is done via URL parameter, not connect_args
 ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False
 ssl_context.verify_mode = ssl.CERT_NONE
 
-from sqlalchemy.pool import NullPool
+# Clean the URL and add the critical parameter for pgbouncer
+base_url = settings.database_url.replace("?sslmode=require&connect_timeout=10", "").replace("&sslmode=require", "")
+
+# Add prepared_statement_cache_size=0 as URL parameter (this is the ONLY way that works)
+if "?" in base_url:
+    db_url = f"{base_url}&prepared_statement_cache_size=0"
+else:
+    db_url = f"{base_url}?prepared_statement_cache_size=0"
 
 engine = create_async_engine(
-    settings.database_url.replace("?sslmode=require&connect_timeout=10", "").replace("&sslmode=require", ""),
+    db_url,
     echo=False,
     future=True,
-    poolclass=NullPool,  # Use NullPool to avoid connection pooling issues with pgbouncer
     connect_args={
-        "ssl": ssl_context,  # SSL without certificate verification
-        "timeout": 10,  # Connection timeout
-        "statement_cache_size": 0,  # CRITICAL: Disable prepared statements for pgbouncer
-        "prepared_statement_cache_size": 0,  # Also disable at this level
-        "server_settings": {
-            "jit": "off"  # Disable JIT for compatibility
-        },
+        "ssl": ssl_context,
+        "timeout": 10,
+        "server_settings": {"jit": "off"},
     },
 )
 
