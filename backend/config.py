@@ -2,7 +2,6 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     database_url: str
-    backend_base_url: str
     n8n_webhook_url: str
 
     class Config:
