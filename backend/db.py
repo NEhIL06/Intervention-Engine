@@ -26,6 +26,7 @@ engine = create_async_engine(
     connect_args={
         "ssl": ssl_context,  # SSL without certificate verification
         "timeout": 10,  # Connection timeout
+        "statement_cache_size": 0,  # Disable prepared statements for pgbouncer
         "server_settings": {
             "jit": "off"  # Disable JIT for compatibility
         },
