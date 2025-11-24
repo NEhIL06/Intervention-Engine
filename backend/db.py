@@ -23,10 +23,14 @@ engine = create_async_engine(
     pool_pre_ping=True,      # Verify connections before using them
     pool_size=5,             # Number of connections to maintain
     max_overflow=10,         # Max connections beyond pool_size
+    # Disable prepared statements at SQLAlchemy level for pgbouncer
+    execution_options={
+        "prepared_statement_cache_size": 0,
+    },
     connect_args={
         "ssl": ssl_context,  # SSL without certificate verification
         "timeout": 10,  # Connection timeout
-        "statement_cache_size": 0,  # Disable prepared statements for pgbouncer
+        "statement_cache_size": 0,  # Disable prepared statements at asyncpg level
         "server_settings": {
             "jit": "off"  # Disable JIT for compatibility
         },
