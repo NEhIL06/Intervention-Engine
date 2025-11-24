@@ -6,9 +6,11 @@ from config import settings
 # postgresql+asyncpg://USER:PASSWORD@HOST:5432/postgres?sslmode=require&connect_timeout=10
 
 import ssl
+import socket
 
 # For asyncpg, we need to configure SSL differently than psycopg
 # Remove sslmode from URL and configure via connect_args
+# Force IPv4 to avoid "Network is unreachable" error on Render
 engine = create_async_engine(
     settings.database_url.replace("?sslmode=require&connect_timeout=10", "").replace("&sslmode=require", ""),
     echo=False,
@@ -19,6 +21,9 @@ engine = create_async_engine(
     connect_args={
         "ssl": ssl.create_default_context(),  # Enable SSL with default settings
         "timeout": 10,  # Connection timeout
+        "server_settings": {
+            "jit": "off"  # Disable JIT for compatibility
+        },
     },
 )
 

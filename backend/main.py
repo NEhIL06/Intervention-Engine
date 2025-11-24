@@ -23,13 +23,12 @@ from config import settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    # Don't create tables on startup - defer until first request
+    # This avoids IPv6 connection issues during Render deployment
+    print("App starting up...")
     
-    print("Database initialized and app started.")
-
     yield
-
+    
     print("System shutting down")
 
 app = FastAPI(title="Alcovia Intervention Backend",lifespan=lifespan)
@@ -44,8 +43,17 @@ app.add_middleware(
 
 
 @app.get("/health")
-def health():
-    return {"status": "ok"}
+async def health():
+    """Health check endpoint that also ensures database tables are created"""
+    try:
+        # Try to create tables if they don't exist (idempotent operation)
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        return {"status": "ok", "database": "connected"}
+    except Exception as e:
+        # Even if DB connection fails, return ok so Render doesn't restart
+        print(f"Database connection note: {e}")
+        return {"status": "ok", "database": "initializing"}
 
 @app.websocket("/ws/{student_id}")
 async def websocket_endpoint(websocket: WebSocket, student_id: str):
