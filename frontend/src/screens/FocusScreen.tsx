@@ -103,6 +103,29 @@ export function FocusScreen() {
         }
     };
 
+    // Handle auto-lock triggered by 3+ tab switches
+    const handleAutoLock = async () => {
+        try {
+            console.log("🔒 AUTO-LOCK TRIGGERED: Submitting failing check-in automatically");
+
+            // Submit a failing check-in (score=0, time=0) to trigger intervention
+            const response = await submitDailyCheckin(STUDENT_ID, 0, 0);
+
+            console.log("Auto-lock check-in response:", response);
+
+            Alert.alert(
+                "Intervention Initiated",
+                "Your account has been locked due to excessive tab switching violations. A mentor has been notified and will review your case."
+            );
+        } catch (error: any) {
+            console.error("Auto-lock error:", error);
+            Alert.alert(
+                "Lock Initiated",
+                "Your account is locked. If the system is having trouble notifying the mentor, please contact support directly."
+            );
+        }
+    };
+
     // ---------- LOCKED STATE ----------
     if (status === "NEEDS_INTERVENTION") {
         return (
@@ -138,7 +161,10 @@ export function FocusScreen() {
                     Track your focus time and complete the daily quiz.
                 </Text>
 
-                <FocusTimer onFocusMinutesChange={setFocusMinutes} />
+                <FocusTimer
+                    onFocusMinutesChange={setFocusMinutes}
+                    onAutoLockTriggered={handleAutoLock}
+                />
 
                 <QuizInput value={quizScore} onChangeText={setQuizScore} />
 

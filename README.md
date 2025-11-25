@@ -172,11 +172,13 @@ sequenceDiagram
 - **No Polling**: WebSocket push notifications, zero refresh needed
 - **Connection Status**: Visual indicator shows real-time connection state
 
-#### ✅ Tab Switching Detection (BONUS #1)
+#### ✅ Tab Switching Detection with Auto-Lock (BONUS #1)
 - **Cheater Prevention**: Detects when student switches away during focus timer
-- **Auto-Fail**: Session automatically fails if tab is hidden
-- **Penalty Logging**: Violations recorded in database
-- **Visual Feedback**: Warning message when student returns to tab
+- **Auto-Fail**: Each tab switch fails the current focus session
+- **Violation Tracking**: Cumulative violations counted across all sessions
+- **Auto-Lock Trigger**: After 3 violations, automatically locks account and initiates intervention
+- **Mentor Notification**: Auto-lock submits failing check-in (score=0, time=0) to trigger mentor workflow
+- **Visual Feedback**: Warning messages show remaining violations before lock
 
 ---
 
@@ -523,17 +525,34 @@ Initial Status: ON_TRACK
    - Timer and quiz inputs re-enabled
 ```
 
-#### Scenario 5: Tab Switching Detection (Bonus)
+#### Scenario 5: Tab Switching Detection with Auto-Lock (Bonus)
 ```
 1. Start focus timer
-2. Switch to another tab/window
+2. Switch to another tab/window (1st violation)
 3. Wait 3 seconds
 4. Return to app
 5. Expected:
    - Timer stops automatically
    - Session marked as failed
-   - Penalty logged
-   - Warning message displayed
+   - Alert shows: "Violations: 1/3"
+   - Warning: "2 violation(s) remaining before auto-lock"
+
+6. Start timer again
+7. Switch tab again (2nd violation)
+8. Return to app
+9. Expected:
+   - Alert shows: "Violations: 2/3"
+   - Warning: "1 violation(s) remaining before auto-lock"
+
+10. Start timer one more time
+11. Switch tab again (3rd violation)
+12. Return to app
+13. Expected:
+    - 🔒 Account automatically locked
+    - Alert: "Account Locked - intervention initiated"
+    - App enters NEEDS_INTERVENTION state
+    - Mentor notification email sent automatically
+    - All inputs disabled
 ```
 
 #### Scenario 6: Timeout Fail-Safe
@@ -666,7 +685,7 @@ WebSocket Push → App Unlocks Instantly ⚡
 
 #### Bonus Challenges ✅
 - [x] **WebSockets**: Instant unlock without refresh
-- [x] **Tab Switching**: Auto-fail on tab change
+- [x] **Tab Switching with Auto-Lock**: Auto-fail on tab change + auto-lock after 3 violations triggers intervention
 
 ---
 
