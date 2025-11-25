@@ -36,8 +36,10 @@ app = FastAPI(title="Alcovia Intervention Backend",lifespan=lifespan)
 # Parse allowed origins from settings
 # Supports comma-separated list or "*" for all origins
 if settings.allowed_origins == "*":
-    origins = ["https://interventionengine.netlify.app"]
+    # For development/testing - allows all origins
+    origins = ["*"]
 else:
+    # For production - parse comma-separated list
     origins = [origin.strip() for origin in settings.allowed_origins.split(",")]
 
 app.add_middleware(
