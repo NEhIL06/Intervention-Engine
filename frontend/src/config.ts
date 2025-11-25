@@ -4,7 +4,7 @@
 // For local dev: Create .env file with these variables
 
 const DEFAULT_HTTP_URL = "https://intervention-engine.onrender.com";
-const DEFAULT_WS_URL = "wss://intervention-engine.onrender.com";
+const DEFAULT_WS_URL = "wss://localhost:3000";
 
 export const BACKEND_HTTP_URL =
     process.env.EXPO_PUBLIC_BACKEND_HTTP_URL || DEFAULT_HTTP_URL;
