@@ -42,6 +42,11 @@ else:
     # For production - parse comma-separated list
     origins = [origin.strip() for origin in settings.allowed_origins.split(",")]
 
+# TEMPORARY FIX: Explicitly add Netlify URL to ensure CORS works
+# This ensures the app works even if environment variable isn't set
+if "https://interventionengine.netlify.app" not in origins and "*" not in origins:
+    origins.append("https://interventionengine.netlify.app")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
