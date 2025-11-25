@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from uuid import UUID
 import httpx
+from fastapi.middleware.cors import CORSMiddleware
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
@@ -33,19 +34,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Alcovia Intervention Backend",lifespan=lifespan)
 
-# Parse allowed origins from settings
-# Supports comma-separated list or "*" for all origins
-if settings.allowed_origins == "*":
-    # For development/testing - allows all origins
-    origins = ["*","https://intervention-engine.vercel.app"]
-else:
-    # For production - parse comma-separated list
-    origins = [origin.strip() for origin in settings.allowed_origins.split(",")]
 
-# TEMPORARY FIX: Explicitly add Netlify URL to ensure CORS works
-# This ensures the app works even if environment variable isn't set
-if "https://interventionengine.netlify.app" not in origins and "*" not in origins:
-    origins.append("https://interventionengine.netlify.app")
+
+origins = [
+    "http://localhost:3000",             # if you test locally
+    "http://localhost:5173",             # (optional) Vite etc.
+    "https://intervention-engine.vercel.app",  # your deployed frontend
+]
 
 app.add_middleware(
     CORSMiddleware,
@@ -54,7 +49,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 @app.get("/health")
 async def health():
