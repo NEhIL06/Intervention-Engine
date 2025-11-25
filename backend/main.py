@@ -37,7 +37,7 @@ app = FastAPI(title="Alcovia Intervention Backend",lifespan=lifespan)
 # Supports comma-separated list or "*" for all origins
 if settings.allowed_origins == "*":
     # For development/testing - allows all origins
-    origins = ["*"]
+    origins = ["*","https://intervention-engine.vercel.app"]
 else:
     # For production - parse comma-separated list
     origins = [origin.strip() for origin in settings.allowed_origins.split(",")]
