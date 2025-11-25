@@ -33,14 +33,16 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Alcovia Intervention Backend",lifespan=lifespan)
 
+# Parse allowed origins from settings
+# Supports comma-separated list or "*" for all origins
+if settings.allowed_origins == "*":
+    origins = ["*"]
+else:
+    origins = [origin.strip() for origin in settings.allowed_origins.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "*",  # Allow all origins for development
-        "http://localhost:8081",
-        "http://localhost:19006",
-        "http://localhost:19000",
-    ],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
